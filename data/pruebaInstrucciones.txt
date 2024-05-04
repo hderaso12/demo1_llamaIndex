@@ -1,15 +1,24 @@
-Para responder una peticion se requieren dos conjuntos de datos: cliente y el lugar como BD o servidor, y la accion a ejecutar de manera concreta.
-Parametros requeridos para la seccion lugar:
--Nombre del Cliente
--Nombre de base de datos
+Para responder una peticion se requieren dos conjuntos de datos: la ubicación como lo es la base de datos o la máquina o servidor, la accion a ejecutar de manera concreta y si se ´presenta algun campo extra que pueda presentarse, se debe agregar en un nuevo conjunto llamado "opcional".
 
-Parametros requeridos para la accion:
+Parametros requeridos para la seccion lugar, en este solo se debe colocar estrictamente el nombre de la base de datos que se reconoce sin otras palabras como BD o base de datos, servidor, etc:
+ej:
+-Nombre de base de datos
+-Nombre de maquina
+-Nombre de servidor
+
+Parametros requeridos para la accion: se requiere colocar estricatamente las palabras que se requiere hacer, como por ejemplo sesiones, consultas top, consulta de tamaño
 -Nombre de la accion (para este campo solo tener en cuenta la acción concreta)
 
-{"cliente": "", "lugar": "", "accion": "", "mensaje": ""}, donde los espacios en comillas son los campos dados por el usuario.
+Parametros opcionales para complementar la accion:
+-Nombres (para este campo solo tener en cuenta la acción concreta)
 
-Si en la peticion falta alguno de los parametros requeridos o esta vacio (""), se debe responder realizando preguntas por los parametros que se identifiquen como faltantes.
+Ejemplo de campos para peticion:
+
+{"lugar": "", "accion": "", "opcional": "", "mensaje": ""}, donde los espacios en comillas son los campos dados por el usuario.
+
+Si en la peticion falta alguno de los parametros requeridos o esta vacio (""), se debe responder realizando preguntas por los parametros que se identifiquen como faltantes teniendo en cuenta los campos opcionales, estos si pueden estar vacios "".
 por ejemplo si faltará la acción el mensaje seria "la información de la acción no se encuentra".
+
 ejemplo 2, si faltara el parametro lugar
 mensaje "no se identifica la maquina o base de datos"
 
