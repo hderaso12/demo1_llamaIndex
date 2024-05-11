@@ -28,7 +28,7 @@ app = Flask(__name__)
 def carga_llamaindex():
     # Esta función inicializa o carga un índice Jina desde un directorio persistente
 
-    PERSIST_DIR = "./storage8"
+    PERSIST_DIR = "./storage9"
 
     if not os.path.exists(PERSIST_DIR):
         # Cargar los documentos y crear el índice
@@ -51,7 +51,7 @@ def carga_llamaindex():
             
             #"Eres un chatbot, capaz de tener interacciones normales para reconocer campos necesarios, identifica si te hace falta información para responder la pregunta y contestar preguntando los campos faltantes en el campo mensaje para complementar, Si tienes toda la estructura de información necesaria, contesta la pregunta"),)
 
-            "Eres un chatbot diseñado para mantener conversaciones naturales y responder preguntas. debes reconocer automáticamente los campos necesarios para formar el json de respuesta, en los mensajes suministrados por el usuario se debe identificar si falta información para realizar la pregunta de ese campo faltante y mantener la informacion que se reconocio, para la respuesta json debe proporcionar una estructura completa. Si la pregunta está completa, debes responder directamente. Si falta información, debes solicitarla de manera clara y precisa al usuario para completarla correctamente la solicitud"),)
+            "Eres un chatbot diseñado para mantener conversaciones naturales y responder preguntas de temas de soporte de consultas a bases de datos y servidores, si recibe preguntas fuera de este contexto enviar un mensaje de que no se puede realizar esa solicitud. debes reconocer automáticamente los campos necesarios para formar el JSON de respuesta, en los mensajes suministrados por el usuario se debe identificar si falta información para realizar la pregunta de ese campo faltante y mantener la informacion que se reconocio, para obtener la respuesta JSON y la cual debe proporcionar una estructura completa. Si la pregunta está completa, debes responder directamente la estructura JSON mencionada. Si falta información, debes solicitarla de manera clara y precisa al usuario para completarla correctamente la solicitud"),)
     
             # "Eres un chatbot, capaz de tener interacciones normales para reconocer campos necesarios para crear la respuesta solo sea estructura deseada json sumando a la respuesta la variable que se llama cliente: {nombre_cliente}, identifica si te hace falta información para responder la pregunta y contestar preguntando los campos faltantes en el mensaje a complementar, Si tienes toda la información necesaria, contesta la pregunta incluiré el campo 'cliente' con el valor '" + nombre_cliente + "'."),)
     return chat_engine
@@ -160,7 +160,7 @@ def enviar_respuesta(telefonoRecibe, respuesta):
     # ... (tu código para enviar respuesta por WhatsApp)
     from heyoo import WhatsApp
   #TOKEN DE ACCESO DE FACEBOOK
-    token='EAALZBPNmy0FgBO7MR2jjbLxqG3C5lgZCT8AYOFOjZCctAQLQYqY9ZAi5F7RW99tVMinRQfV1eZC6X4Bw13BQLB97ueLO1trZCy6WRj9QtoK9tWd9XNhzFOwOpSOFSdaLPTacfQLqRYpa1YbXud4LxipH8nSFBfM6N13lOlMeCeRtF6UTihUAjcg3t5JZCbKHx8XZAdN2N9vAzUIj1P3aDmwZD'
+    token='EAALZBPNmy0FgBO6Tig94f5GosKSwvJ80K7BQrpRWMkfUVKjjQZClzW4bwJ2ZA7gTmvTO1QB7bxNm5fjfszZCZA68t6sAphRHzBfSRepAZAOREsgfO73lnMOG3ekx8mLPDooPYAhcpEpcckVhU2wB3bTZAC712GpOQeZCHSlPEAsapffmlbv4oYQZBMwUpp6fOppclOg4vbFAiWf5JzZAvh4EE7'
     #IDENTIFICADOR DE NÚMERO DE TELÉFONO
     idNumeroTeléfono='118462694689557'
     #INICIALIZAMOS ENVIO DE MENSAJES

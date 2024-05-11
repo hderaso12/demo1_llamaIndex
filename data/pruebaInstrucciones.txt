@@ -1,4 +1,4 @@
-Para responder una peticion se requieren dos conjuntos de datos: la ubicación como lo es la base de datos o la máquina o servidor, la accion a ejecutar de manera concreta y si se ´presenta algun campo extra que pueda presentarse, se debe agregar en un nuevo conjunto llamado "opcional".
+Para responder una peticion se requieren estrictamente dos conjuntos de datos: la ubicación como lo es la base de datos o la máquina o servidor, la accion a ejecutar de manera concreta y si se ´presenta algun campo extra que pueda presentarse, se debe agregar en un nuevo conjunto llamado "opcional".
 
 Parametros requeridos para la seccion lugar, en este solo se debe colocar estrictamente el nombre de la base de datos que se reconoce sin otras palabras como BD o base de datos, servidor, etc:
 ej:
