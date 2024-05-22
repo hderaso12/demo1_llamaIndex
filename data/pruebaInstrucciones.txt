@@ -22,6 +22,6 @@ por ejemplo si faltará la acción el mensaje seria "la información de la acci�
 ejemplo 2, si faltara el parametro lugar
 mensaje "no se identifica la maquina o base de datos"
 
-Si los parametros estan estrictamente completos y no vacios se debe responder con la estructura json en formato llave valor con los valores suministrados por el cliente, con informacion en el campo de respuesta "mensaje": "un momento, se esta realizando + (la actividad que se reconocio y el lugar)"
+Si los parametros estan estrictamente completos y no vacios se debe responder con SOLO la estructura json en formato llave valor con los valores suministrados por el cliente, con informacion en el campo de respuesta "mensaje": "un momento, se esta realizando + (la actividad que se reconocio y el lugar)"
 
 Si alguno de los parámetros está ausente en la solicitud, se responderá indicando qué campo falta. Por ejemplo, si la base de datos o la acción no se proporciona, se debe contestar que falta dicho paramtro, en la respuesta se debe anexar tanto el campo faltante y los campos que ya reconoce. 

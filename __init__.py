@@ -14,13 +14,30 @@ from llama_index.core import (
 from llama_index.core.memory import ChatMemoryBuffer
 import os
 import pandas as pd
+import re
 
-api_key = "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"
+#funcion para leer llaves necesarias y tokens
+def leer_credenciales(nombre_archivo):
+    credenciales = {}
+    with open(nombre_archivo, "r") as file:
+        for line in file:
+            line = line.strip()
+            if not line or ": " not in line:
+                continue  # Ignorar líneas vacías o sin delimitador ": "
+            key, value = line.split(": ", 1)  # Asegurar que solo se divida en 2 partes
+            credenciales[key] = value.strip('"')
+    return credenciales
+
+
+credenciales = leer_credenciales("credenciales.txt")
+api_key = credenciales.get("openai_api_key")
 client = OpenAI(api_key=api_key)
 os.environ["OPENAI_API_KEY"] = api_key
 
 # Lee el archivo Excel
-df = pd.read_excel('numero_cliente.xlsx')
+excel_clientes = 'numero_cliente.xlsx'
+df = pd.read_excel(excel_clientes)
+#datos_url = pd.read_excel('numero_cliente.xlsx', sheet_name='bd_clientes')
 
 app = Flask(__name__)
 ###################################################################
@@ -64,7 +81,9 @@ print("carga LlamaIndex")
 def webhook_whatsapp():
 
     if request.method == "GET":
-        if request.args.get('hub.verify_token') == "Token2023":           
+        token_conexion = credenciales.get("token_conexion")
+        print(token_conexion)
+        if request.args.get('hub.verify_token') == credenciales.get("token_conexion"):           
             return request.args.get('hub.challenge')
         else:
             return "Error de autenticación."
@@ -89,37 +108,45 @@ def handle_whatsapp_message(data):
         numero = int(telefono_cliente)
         # Filtra el DataFrame para encontrar el cliente correspondiente al número ingresado
         cliente = df.loc[df['numero'] == numero, 'cliente'].values
-
         # Verifica si se encontró algún cliente
         if len(cliente) > 0:
             print("**************El cliente correspondiente al número", numero, "es:", cliente[0])
             nombre_cliente = cliente[0]
-            print(nombre_cliente)
-            if ("Hola") in mensaje:
-                enviar_respuesta(telefono_cliente, "Hola, ¿cómo puedo ayudarte?")
-        
-            else:               
-                informacion_ingresada = mensaje
-                if informacion_ingresada.lower() == 'salir':
-                    print("Saliendo del programa.")
-                    response = "saliendo de la consulta"
-                    enviar_respuesta(telefono_cliente,  (response))
-                    chat_engine.reset()
-                    mensaje = ""
-                else:   
-                    response = str(chat_engine.chat(informacion_ingresada))
-                    print(response)
-                    print(type(response))
-                    try:
-                        response_json = json.loads(response)
-                        if "mensaje" in response_json:
-                            diccionario_estructura_consulta = (response_json)
-                            #campos_solicitud(diccionario_estructura_consulta, telefono_cliente)
-                            print("Estructura generada para enviar a funcion de consulta de servicio")
-                            #response = "."
-                    except json.JSONDecodeError:
-                        print("La respuesta no es un JSON válido")
-                    enviar_respuesta(telefono_cliente, (response))
+            url_cliente = obtener_url(nombre_cliente, excel_clientes)
+
+            if url_cliente:
+                print(f"La URL para el cliente {numero}: {url_cliente}")
+            else:
+                print(f"No se encontró la URL para el cliente con número {cliente}.")
+               ### aqui debe reiniciar chatbot::::::::::
+                     
+            informacion_ingresada = mensaje
+            if informacion_ingresada.lower() == 'salir':
+                print("Saliendo del programa.")
+                response = "saliendo de la consulta"
+                enviar_respuesta(telefono_cliente,  (response))
+                chat_engine.reset()
+                mensaje = ""
+            else:   
+                response = str(chat_engine.chat(informacion_ingresada))
+                #print(response)
+                print(type(response))
+                #funcion para seleccionar estructura json
+                response = extraer_json(response)
+                try:
+                    
+                    print("ingreso a funcion de extraccion json:::::::::::::::::::::::::::::::::::::::::::::")
+                    response_json = json.loads(response)
+                    response_json["cliente"] = nombre_cliente
+                    print((response_json))
+                    if "mensaje" in response_json:
+                        diccionario_estructura_consulta = (response_json)
+                        campos_solicitud(diccionario_estructura_consulta, telefono_cliente, url_cliente)
+                        print("Estructura generada para enviar a funcion de consulta de servicio")
+                        response = "."
+                except json.JSONDecodeError:
+                    print("La respuesta no es un JSON válido")
+                enviar_respuesta(telefono_cliente, (response))
             
         else:
             response = "No se encontró ningún cliente para el número: " + str(numero)
@@ -130,7 +157,7 @@ def handle_whatsapp_message(data):
         print(str(e))
         
 #aqui se define el envio de estructura para que realice tarea de consulta a servicio 
-def campos_solicitud(diccionario_estructura_consulta, telefono_cliente):
+def campos_solicitud(diccionario_estructura_consulta, telefono_cliente, url_cliente):
     
     try:
         response = diccionario_estructura_consulta["mensaje"]
@@ -139,35 +166,42 @@ def campos_solicitud(diccionario_estructura_consulta, telefono_cliente):
         print(diccionario_estructura_consulta)
         serv_nombre = diccionario_estructura_consulta['lugar']
         accion_requerida = diccionario_estructura_consulta['accion']
-        #mas_informacion =  diccionario_estructura_consulta['']
-        url_peticion =    "http://192.168.169.23:8083/dbaexperts/dataBase"             
-        url = url_peticion
+        opcional =  diccionario_estructura_consulta['opcional']
+        nombre_cliente =  diccionario_estructura_consulta['cliente']
+                
+        url = url_cliente
         data = {
             "srvName": serv_nombre,
             "qryAction": accion_requerida,
-            "valores": []
+            "opcional": opcional,
+            "cliente" : nombre_cliente
         }
         print(data)
         respuesta = respuesta_api_request(url, data)
-        enviar_respuesta(telefono_cliente, respuesta)
+        print(f'respuesta de servicio java + {respuesta}')
+        print(type(respuesta))
+        enviar_respuesta(telefono_cliente, str(respuesta))
         chat_engine.reset()
         
     except Exception as e:
         print("--- Error al procesar la petición ---")
         print(str(e))
+        respuesta = "no se encuentra respuesta de la consulta con la informacion suministrada"
+        enviar_respuesta(telefono_cliente, str(respuesta))
      
 def enviar_respuesta(telefonoRecibe, respuesta):
     # ... (tu código para enviar respuesta por WhatsApp)
     from heyoo import WhatsApp
   #TOKEN DE ACCESO DE FACEBOOK
-    token='EAALZBPNmy0FgBO6Tig94f5GosKSwvJ80K7BQrpRWMkfUVKjjQZClzW4bwJ2ZA7gTmvTO1QB7bxNm5fjfszZCZA68t6sAphRHzBfSRepAZAOREsgfO73lnMOG3ekx8mLPDooPYAhcpEpcckVhU2wB3bTZAC712GpOQeZCHSlPEAsapffmlbv4oYQZBMwUpp6fOppclOg4vbFAiWf5JzZAvh4EE7'
+    token=credenciales.get("facebook_token")
     #IDENTIFICADOR DE NÚMERO DE TELÉFONO
-    idNumeroTeléfono='118462694689557'
+    idNumeroTeléfono=credenciales.get("numero_celular")
     #INICIALIZAMOS ENVIO DE MENSAJES
     mensajeWa=WhatsApp(token,idNumeroTeléfono)
     telefonoRecibe=telefonoRecibe.replace("521","57")
     #ENVIAMOS UN MENSAJE DE TEXTO
     mensajeWa.send_message(respuesta,telefonoRecibe)
+    
     
 def respuesta_api_request(url, data):
     try:
@@ -182,17 +216,17 @@ def respuesta_api_request(url, data):
                 # Divide el texto en líneas
                 lineas = respuesta_texto.split('\n')
                 print(lineas)
-                # Obtener el número de sesiones y el mensaje
-                num_sesiones = lineas[0].strip() if lineas and lineas[0].strip().isdigit() else None
+              
+                consulta = lineas[0].strip() if lineas and lineas[0].strip().isdigit() else None
                 mensaje = lineas[1].strip() if len(lineas) > 1 else None
                 # Crear estructura JSON
                 estructura_json = {
                     "mensaje_adicional": mensaje,
-                    "num_sesiones": num_sesiones                    
+                    "consulta": consulta                    
                 }
                 # Convertir a JSON sin escapar caracteres no ASCII
                 json_resultado = json.dumps(estructura_json, ensure_ascii=False)
-                resultado_estructura= mensaje + " "+ num_sesiones
+                resultado_estructura= mensaje + " "+ consulta
                 # Imprimir el resultado
                 print("resultado respuesta de consumo microservicio")
                 print(json_resultado)
@@ -205,7 +239,32 @@ def respuesta_api_request(url, data):
             return entrega_respuesta
     except requests.RequestException as e:
         print(f"Error de conexión: {e}")
+        return "se genero un error con los datos obtenidos, se revisara la información para dar solucion"
     
+def extraer_json(response):
+    # Buscar la línea que contiene la palabra "json"
+    match = re.search(r'json\s*({.*?})', response, re.DOTALL)
+    if match:
+        # Extraer la estructura JSON
+        json_part = match.group(1)
+        print("Parte JSON encontrada:")
+        return json_part
+    else:
+        print("No se encontró ninguna estructura JSON en la cadena.")
+        return response
+
+
+def obtener_url(cliente, archivo_excel):
+    try:
+        datos = pd.read_excel(archivo_excel, sheet_name='bd_clientes')
+        url_cliente = datos.loc[datos['cliente'] == cliente, 'links'].values
+        if len(url_cliente) > 0:
+            return url_cliente[0]
+        else:
+            return "Cliente no coincide con la base de datos"
+    except (FileNotFoundError, IndexError):
+        return "Error al procesar el archivo"
+
 
 if __name__ == "__main__":
     app.run(debug=True)
